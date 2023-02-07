@@ -192,6 +192,13 @@ df_vac_latest %>%
 
 ```{r}
 
+df_vac_latest %>% 
+  filter(Series_Complete_Pop_Pct > 10) %>% 
+  group_by(Recip_County) %>% 
+  ungroup() %>% 
+  filter(Date == min(Date, na.rm = TRUE))
+ 
+
 ```
 
 ### Aggregate the number of vaccination
@@ -201,6 +208,10 @@ and average of vaccination pct across counties for each day (Hint: grouping and 
 
 
 ```{r}
+
+df_vac_latest %>% 
+  group_by(Recip_State, Date) %>% 
+  summarise(totvac = sum(Series_Complete_Yes), mean(Series_Complete_Pop_Pct))
 
 ```
 
