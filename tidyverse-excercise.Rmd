@@ -49,12 +49,17 @@ Now the data is in R workspace. Do the following
 ### Count the number of variabes and rows
 
 ```{r}
-
+df_vac %>% dim()
+# is the same as:
+dim(df_vac)
 ```
 
 ### Print out the first 6 rows of the data.frame
 
 ```{r}
+df_vac %>% head()
+df_vac %>% slice(1:6)
+df_vac %>% select(6)
 
 
 ```
@@ -67,6 +72,9 @@ Now the data is in R workspace. Do the following
 - Obviously there are data points not from states. What are they?
 
 ```{r}
+df_vac %>% count(Recip_State) %>% arrange(desc(n))
+df_vac %>% count(Recip_State) %>% count(nchar(Recip_State))
+
 
 ```
 
@@ -78,7 +86,13 @@ Now the data is in R workspace. Do the following
 The variable Date is character. Convert it to a Date variable.
 
 ```{r}
+df_vac %>% 
+  head() %>% 
+  mutate(Date = Date %>% as.Date(format = "%m/%d/%Y"))
 
+df_vac %>% 
+  head() %>% 
+  mutate(Date = Date %>% lubridate::mdy()) ## :: means using function from package without loading it
 ```
 
 ### Erase unnecessary rows
@@ -86,6 +100,14 @@ The variable Date is character. Convert it to a Date variable.
 First remove the non-country entries
 
 ```{r}
+
+df_vac %>% 
+  mutate (FIPS = FIPS %>% as.integer) %>% 
+  filter(!is.na(FIPS))
+
+df_vac <- df_vac %>% 
+  mutate (FIPS = FIPS %>% as.integer) %>% 
+  filter(!is.na(FIPS))
 
 ```
 
@@ -95,6 +117,15 @@ First remove the non-country entries
 Find the latest date of the data, then subset the data with only the newest date for each country
 
 ```{r}
+df_vac %>% 
+  group_by(FIPS) %>% 
+  filter(Date == max(Date))
+
+df_vac_latest <- df_vac %>% 
+  group_by(FIPS) %>% 
+  ungroup() %>% 
+  filter(Date == max(Date))
+
 
 ```
 
@@ -103,6 +134,19 @@ Find the latest date of the data, then subset the data with only the newest date
 Which county has the highest vaccination rate? What is the number?
 
 ```{r}
+df_vac_latest %>% 
+  names()
+
+df_vac_latest %>% 
+  summarise(Series_Complete_Pop_Pct)
+
+df_vac_latest %>% 
+  pull(Series_Complete_Pop_Pct) %>% # makes it a vector variable
+  max(na.rm = TRUE) # because it is a vector variable, I can now calculate the maximum
+
+df_vac_latest %>% 
+  filter(Series_Complete_Pop_Pct == max(Series_Complete_Pop_Pct, na.rm = TRUE))
+
 
 ```
 
@@ -115,11 +159,32 @@ Using the latest data created above, find out proportion of counties with more t
 
 ```{r}
 
+df_vac_latest %>% 
+  count(Series_Complete_Pop_Pct > 50) %>% 
+  mutate(prop=n/sum(n))
+
 ```
 
 ### Proportion of county with more than 50 percent vaccination rate, by state (latest)
 
 ```{r}
+
+df_vac_latest %>% 
+  group_by(Recip_State) %>% 
+  count(Series_Complete_Pop_Pct > 50) %>% 
+  mutate(prop=n/sum(n))
+
+df_vac_latest %>% 
+  group_by(Recip_State) %>% 
+  count(morethan50 = Series_Complete_Pop_Pct > 50) %>% 
+  mutate(prop=n/sum(n))
+
+df_vac_latest %>% 
+  group_by(Recip_State) %>% 
+  count(morethan50 = Series_Complete_Pop_Pct > 50) %>% 
+  mutate(prop=n/sum(n)) %>% 
+  filter(morethan50 == TRUE) %>% 
+  arrange(desc(prop))
 
 ```
 
